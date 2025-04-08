@@ -1,0 +1,19 @@
+{
+    "claim": "All the price are based on USD per 1,000,000 tokens",
+    "qwen-max": {
+        "input": 0.33,
+        "output": 1.33
+    },
+    "qwen-plus": {
+        "input": 0.111,
+        "output": 0.278
+    },
+    "qwen-turbo": {
+        "input": 0.042,
+        "output": 0.083
+    },
+    "deepseek-chat":{
+        "input": 0.014,
+        "output": 0.2   
+    }
+}

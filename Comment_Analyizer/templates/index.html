@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Comment Analyizer V2</title>
+
+    <!-- Tailwind CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+
+    <!-- XLSX Library -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+
+    <!-- Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@2.5.0/fonts/remixicon.css" rel="stylesheet">
+</head>
+
+<body class="min-h-screen bg-slate-50">
+    <div class="container mx-auto px-4 py-8">
+        <div class="max-w-4xl mx-auto">
+            <div class="card">
+                <!-- Header -->
+                <div class="card-header">
+                    <h1 class="text-2xl font-bold text-white text-center">Comment Analyizer</h1>
+                </div>
+
+                <div class="card-body">
+                    <!-- System Text -->
+                    <div class="form-group">
+                        <label class="form-label">System Text</label>
+                        <table id="topicsTable" class="w-full border-collapse">
+                            <thead>
+                                <tr>
+                                    <th class="border px-4 py-2">Topic</th>
+                                    <th class="border px-4 py-2">Description</th>
+                                    <th class="border px-4 py-2">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td class="border px-4 py-2"><input type="text" class="w-full"
+                                            value="Topic1"></td>
+                                    <td class="border px-4 py-2"><input type="text" class="w-full"
+                                            value="Description for Topic1">
+                                    </td>
+                                    <td class="border px-4 py-2"><button onclick="removeTopicRow(this)">Remove</button>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="border px-4 py-2"><input type="text" class="w-full"
+                                            value="Topic2"></td>
+                                    <td class="border px-4 py-2"><input type="text" class="w-full"
+                                            value='Description for Topic2'>
+                                    </td>
+                                    <td class="border px-4 py-2">
+                                        <button class="text-red-600 hover:text-red-800"
+                                            data-action="removeTopic">Remove</button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        <div class="flex gap-2 mt-2">
+                            <button data-action="addTopic" class= "btn btn-primary">Add Topic</button>
+                            <div class="relative">
+                                <div class="tooltip">
+                                    <button onclick="document.getElementById('topicsFileInput').click();"
+                                        class= "btn btn-primary-green">
+                                        Upload Topics
+                                    </button>
+                                    <span class="tooltiptext">Add your topics here or upload an Excel file with a "Topic" and a "Description"
+                                        column</span>
+                                </div>
+                                <input type="file" id="topicsFileInput" accept=".xlsx,.csv" class="hidden" />
+                                <button id="copySystemPromptBtn" class= "btn btn-secondary">
+                                    Copy System Prompt
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="separator"></div>
+
+                    <!-- File Upload -->
+                    <div class="form-group">
+                        <div class="file-upload" onclick="document.getElementById('fileInput').click();">
+                            <i class="ri-upload-cloud-2-line"></i>
+                            <span>Upload XLSX File</span>
+                            <input type="file" id="fileInput" accept=".xlsx" class="file-input hidden" />
+                        </div>
+                        <span id="fileName" class="file-name"></span>
+                    </div>
+
+                    <!-- Column Selection -->
+                    <div id="columnSelectSection" class="form-group hidden">
+                        <label class="form-label">Select Content Column</label>
+                        <select id="contentColumn" class="form-select"></select>
+                    </div>
+
+                    <!-- Unique ID Column Selection -->
+                    <div id="uniqueIdColumnSection" class="form-group hidden">
+                        <label class="form-label">Select Unique ID Column (Optional)</label>
+                        <select id="uniqueIdColumn" class="form-select"></select>
+                    </div>
+
+                    <div class="separator"></div>
+
+                    <!-- Model Selection -->
+                    <div class="form-group">
+                        <label class="form-label">Model Selection</label>
+                        <div class="radio-group">
+                            <label class="radio-label">
+                                <input type="radio" name="model" value="qwen-plus" checked />
+                                <span>Qwen Plus</span>
+                            </label>
+                            <label class="radio-label">
+                                <input type="radio" name="model" value="qwen-turbo" />
+                                <span>Qwen Turbo</span>
+                            </label>
+                            <label class="radio-label">
+                                <input type="radio" name="model" value="qwen-max" />
+                                <span>Qwen Max</span>
+                            </label>
+                            <label class="radio-label">
+                                <input type="radio" name="model" value="deepseek-chat" />
+                                <span>Deep Seek V3</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Processing Configuration -->
+                    <div class="grid-2">
+                        <div class="form-group">
+                            <label class="form-label">Parallel Processing Lines</label>
+                            <input type="number" id="parallelLines" min="1" max="20" value="10" class="form-input" />
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Rows to Process</label>
+                            <input type="number" id="rowsToProcess" value="0" class="form-input" />
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Estimated Cost (In USD)</label>
+                            <p id="estimatedCost">0.000</p> <!-- 新增的预计成本显示 -->
+                        </div>
+                        <div class="form-group">
+                            <button id="updateEstimatedCostBtn"
+                                class="btn btn-primary-green">
+                                Update Estimated Cost
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Progress Section -->
+                    <div class="progress-section">
+                        <div class="progress-header">
+                            <span class="progress-label">Progress</span>
+                            <span id="progressPercentage" class="progress-percentage">0%</span>
+                        </div>
+                        <div class="progress-bar-container">
+                            <div id="progressBar" class="progress-bar" style="width: 0%"></div>
+                        </div>
+
+                        <!-- Statistics -->
+                        <div class="stats-grid">
+                            <div class="stats-left">
+                                <p id="currentRow">Current Row: 0</p>
+                                <p id="processedCount">Processed: 0</p>
+                            </div>
+                            <div class="stats-right">
+                                <p id="elapsedTime">Time Elapsed: 00:00:00</p>
+                                <p id="estimatedTime">Estimated Remaining: 00:00:00</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="button-group">
+                        <button id="processBtn" class="btn btn-primary">
+                            <i class="ri-play-line"></i>
+                            Process
+                        </button>
+                        <button id="stopBtn" class="btn btn-danger" disabled>
+                            <i class="ri-stop-line"></i>
+                            Stop
+                        </button>
+                        <button id="downloadBtn" class="btn btn-secondary" disabled>
+                            <i class="ri-download-line"></i>
+                            Download Results
+                        </button>
+                    </div>
+
+                    <!-- Results Table -->
+                    <div id="resultsSection" class="results-section hidden">
+                        <h2 class="results-title">Results Preview</h2>
+                        <div class="table-container">
+                            <table id="resultsTable" class="results-table">
+                                <thead>
+                                    <tr></tr>
+                                </thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Script -->
+    <script src="{{ url_for('static', filename='js/main_script.js') }}"></script>
+
+</body>
+
+</html>
