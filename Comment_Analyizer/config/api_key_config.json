@@ -1,10 +1,10 @@
 {
     "qwen": {
-        "api_key": "sk-2a37db78a2954f348bc72aac9b20c6cc",
+        "api_key": "",
         "onwer": "Shilong"
     },
     "deepseek": {
-        "api_key": "sk-ae78445d5999410c80b23e46b6375584",
+        "api_key": "",
         "onwer": "Shilong"
     }
 }
